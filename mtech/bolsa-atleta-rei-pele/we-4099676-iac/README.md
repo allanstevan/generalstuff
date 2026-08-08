@@ -1,6 +1,10 @@
 # IaC — Bolsa Atleta (DEV / HML)
 
-Task WorkExtra **#4099676**. Laudo: `../IaC_Manifests_Dev_Homolog_v1.html`.
+Task WorkExtra **#4099676**. Laudo: `IaC_Manifests_Dev_Homolog_v1.html` (nesta pasta no GitHub / `../` no mtech).
+
+**GitHub:** https://github.com/allanstevan/generalstuff/tree/main/mtech/bolsa-atleta-rei-pele/we-4099676-iac  
+
+**M-TECH (auth):** https://corp.skyline.lat/mtech/4099676/
 
 ## Compose
 
