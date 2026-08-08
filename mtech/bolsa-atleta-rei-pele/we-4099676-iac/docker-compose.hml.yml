@@ -1,0 +1,62 @@
+# Bolsa Atleta — HML stack (esqueleto). Isolado de DEV.
+# Uso: docker compose -f docker-compose.hml.yml --env-file .env.hml up -d
+name: bolsa-atleta-hml
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bolsa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-bolsa_hml}
+    # HML: não expor Postgres na host por padrão
+    expose:
+      - "5432"
+    volumes:
+      - bolsa_pg_hml:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [bolsa_hml]
+
+  api:
+    image: ${API_IMAGE:-bolsa-atleta-api:hml}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-bolsa}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bolsa_hml}
+      APP_ENV: hml
+      LOG_LEVEL: info
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3001"
+    user: "1000:1000"
+    read_only: true
+    tmpfs: ["/tmp"]
+    networks: [bolsa_hml]
+
+  web:
+    image: ${WEB_IMAGE:-bolsa-atleta-web:hml}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:?set PUBLIC_API_URL}
+      APP_ENV: hml
+    depends_on: [api]
+    ports:
+      - "8080:3000"  # borda HML
+    user: "1000:1000"
+    networks: [bolsa_hml]
+
+networks:
+  bolsa_hml:
+    name: bolsa_hml_net
+
+volumes:
+  bolsa_pg_hml:
+    name: bolsa_pg_hml_data

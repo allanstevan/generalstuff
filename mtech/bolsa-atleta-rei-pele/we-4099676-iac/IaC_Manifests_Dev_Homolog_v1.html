@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+  <title>#4099676 — Manifests IaC Dev/Homolog a partir do Plano de Segurança Fase 1 (v1)</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 12pt; line-height: 1.4; color: #111; max-width: 18cm; margin: 1.5cm auto; padding: 0 1cm; }
+    h1 { font-size: 14pt; text-align: center; margin: 0 0 0.35em 0; }
+    h2 { font-family: "Lato", Arial, Helvetica, sans-serif; font-size: 18pt; font-weight: 700; margin: 1em 0 0.35em 0; border-bottom: none; padding-bottom: 0; }
+    h3 { font-size: 12pt; margin: 0.8em 0 0.3em 0; }
+    h4 { font-size: 12pt; margin: 0.65em 0 0.25em 0; }
+    p { margin: 0.4em 0; text-align: justify; }
+    ul, ol { margin: 0.3em 0 0.5em 1.2em; }
+    li { margin: 0.18em 0; }
+    .capa { text-align: center; margin-bottom: 0.9em; }
+    .capa p { margin: 0.12em 0; text-align: center; }
+    .small { font-size: 10pt; }
+    .ref { font-size: 10pt; font-style: italic; color: #333; }
+    hr { border: none; border-top: 1px solid #333; margin: 0.55em 0; }
+    .ok { border-left: 4px solid #16a34a; background: #f0fdf4; padding: 0.5em 0.75em; margin: 0.55em 0; }
+    .warn { border-left: 4px solid #b45309; background: #fff7ed; padding: 0.5em 0.75em; margin: 0.55em 0; }
+    .info { border-left: 4px solid #2563eb; background: #eff6ff; padding: 0.5em 0.75em; margin: 0.55em 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 0.55em 0 0.85em 0; }
+    th, td { border: 1px solid #999; padding: 0.32em 0.4em; vertical-align: top; text-align: left; }
+    th { background: #0b2c4d; color: #fff; }
+    code, pre { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+    pre { background: #f4f4f5; border: 1px solid #ddd; padding: 0.55em 0.7em; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+    .gap { background: #fff7ed; }
+    .okrow { background: #f0fdf4; }
+</style>
+</head>
+<body>
+<div class="capa">
+  <p><strong>M-TECH TECNOLOGIA DIGITAL LTDA</strong></p>
+  <p class="small">OS Nº 03 — Contrato 043/SEME/2026</p>
+  <p class="small">SEME — Secretaria Municipal de Esportes e Lazer / PMSP</p>
+  <hr />
+  <h1>Manifests IaC Dev/Homolog a partir do Plano de Segurança Fase 1 (v1)</h1>
+  <p><strong>Programa Bolsa Atleta Rei Pelé — Sistema de Gestão</strong></p>
+  <p class="small">Fase 02 — Fundação / Desenvolvimento (com baseline Fase 01)</p>
+  <p class="small"><strong>Tarefa WorkExtra:</strong> #4099676</p>
+  <p class="small"><strong>Autor:</strong> Allan Stevan Pereira de Oliveira — Gerente de Sistemas</p>
+  <p class="small"><strong>Data:</strong> 06/08/2026</p>
+</div>
+
+<p class="ref">
+  Base: Setup CI/CD #8312452; Arquitetura #4485199 (Docker/IaC portável; DEV Supabase; PRODAM como destino de hospedagem alinhado em 04/08);
+  item 10 documental (Guia de Ambientes e Esteira); plano de segurança/RNF da v1.1; OS 03 Fase 2 fundação.
+</p>
+
+<div class="info">
+  <p><strong>Natureza.</strong> Manifests de infraestrutura como código para <strong>dev</strong> e <strong>homolog</strong>,
+  gerados com apoio de IA e revisados, a partir do esqueleto de segurança/ambientes da Fase 1.
+  Não congelam produção PRODAM; são portáveis (Compose + esqueleto K8s/Terraform).</p>
+</div>
+
+<h2>1. Descrição da tarefa</h2>
+<p>
+  Usar IA para gerar os manifests de infraestrutura como código (ambientes dev/homolog) a partir do plano
+  de segurança da Fase 1, com revisão humana e publicação versionada.
+</p>
+
+<h2>2. Princípios de segurança aplicados nos manifests</h2>
+<ul>
+  <li>Segredos fora da imagem (env / secret store); nunca commit de credencial.</li>
+  <li>Rede interna entre serviços; exposição mínima de portas.</li>
+  <li>TLS na borda (ingress/túnel); cookies Secure em HML quando HTTPS.</li>
+  <li>Imagens pinadas por digest quando possível; scan (Trivy) no pipeline (#8312452).</li>
+  <li>Usuário não-root nos containers de app.</li>
+  <li>Separação física/lógica DEV ≠ HML (projetos/namespaces/redes distintas).</li>
+  <li>Backup e volume nomeado só onde necessário (Postgres); política de retenção a calibrar com a SEME.</li>
+</ul>
+
+<h2>3. Topologia alvo (dev / homolog)</h2>
+<pre>Internet → Ingress/Túnel TLS
+         → edge (proxy)
+         → web (Next.js / PWA)
+         → api (microsserviços / BFF)
+         → postgres
+         → (opcional) redis / filas
+         → storage S3-compat ou volume (docs)
+</pre>
+<p class="ref">Stack de referência da arquitetura: PostgreSQL; front Next.js; containers Docker; portabilidade PRODAM.</p>
+
+<h2>4. Artefatos entregues nesta pasta</h2>
+<table>
+  <tr><th>Arquivo</th><th>Ambiente</th><th>Função</th></tr>
+  <tr><td><code>iac/docker-compose.dev.yml</code></td><td>DEV</td><td>Stack local/dev compartilhada</td></tr>
+  <tr><td><code>iac/docker-compose.hml.yml</code></td><td>HML</td><td>Homologação (recursos e rede mais rígidos)</td></tr>
+  <tr><td><code>iac/.env.example</code></td><td>ambos</td><td>Variáveis sem segredo real</td></tr>
+  <tr><td><code>iac/k8s/namespace-dev.yaml</code></td><td>DEV</td><td>Namespace + ResourceQuota leve</td></tr>
+  <tr><td><code>iac/k8s/namespace-hml.yaml</code></td><td>HML</td><td>Namespace + NetworkPolicy default-deny egress seletivo</td></tr>
+  <tr><td><code>iac/k8s/deploy-web-api-sample.yaml</code></td><td>ambos</td><td>Sample Deployment/Service (web+api)</td></tr>
+  <tr><td><code>iac/terraform/main.tf</code></td><td>cloud/PRODAM*</td><td>Esqueleto providers + tags de ambiente</td></tr>
+  <tr><td><code>iac/README.md</code></td><td>—</td><td>Como aplicar e limites</td></tr>
+</table>
+<p class="small">* Terraform permanece genérico até path oficial PRODAM/CMU.</p>
+
+<h2>5. Critérios de aceite</h2>
+<ol>
+  <li><code>docker compose -f iac/docker-compose.dev.yml config</code> valida sem erro.</li>
+  <li>Nenhum segredo real versionado; apenas <code>.env.example</code>.</li>
+  <li>HML não reutiliza volume/nome de container de DEV.</li>
+  <li>Manifests K8s aplicáveis em cluster de laboratório (ou documentada limitação).</li>
+  <li>Alinhamento ao pipeline #8312452 (build → scan → deploy por ambiente).</li>
+</ol>
+
+<h2>6. Pontos de atenção</h2>
+<ol>
+  <li>Path de rede/namespace real da PRODAM ainda pode ajustar labels e storage classes.</li>
+  <li>Gov.br HML exige credenciais do órgão — fora do IaC.</li>
+  <li>Supabase em DEV é opção da arquitetura; em HML preferir Postgres gerenciado alinhado a PRODAM quando disponível.</li>
+</ol>
+
+<h2>7. Conclusão</h2>
+<p>
+  Entrega o esqueleto IaC dev/homolog com controles de segurança da Fase 1, pronto para o Guia de Ambientes e Esteira
+  e para evolução pelo time de infraestrutura/dev na Fase 2.
+</p>
+<div class="ok">
+  <p><strong>Aceite.</strong> Manifests + este laudo em <code>/mtech/4099676/</code>.</p>
+</div>
+
+<p class="small" style="margin-top:1.2em;">
+  <strong>Ficha técnica:</strong> M-TECH Tecnologia Digital Ltda. — OS Nº 03 / Contrato 043/SEME/2026 —
+  Projeto Bolsa Atleta Rei Pelé — Tarefa #4099676. Publicação: <code>https://www.allan.lat/mtech/4099676/</code>
+</p>
+</body>
+</html>
